@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SerialPortDemo</string>
+    <string name="network_connect_error">请检查网络是否连接</string>
+    <string name="serial_open">打开串口</string>
+    <string name="serial_close">关闭串口</string>
+    <string name="serial_send">发送数据</string>
+    <string name="serial_port_debug">售货机串口调试</string>
+</resources>
