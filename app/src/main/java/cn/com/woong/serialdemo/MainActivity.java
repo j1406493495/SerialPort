@@ -1,17 +1,12 @@
 package cn.com.woong.serialdemo;
 
-import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-
 import com.blankj.utilcode.util.ConvertUtils;
 import com.blankj.utilcode.util.LogUtils;
-
 import android_serialport_api.SerialPortManager;
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
 import cn.com.woong.serialdemo.base.BaseActivity;
 import cn.com.woong.serialdemo.constant.CmdCode;
@@ -20,6 +15,7 @@ import cn.com.woong.serialdemo.utils.PacketUtils;
 import cn.com.woong.serialdemo.widget.TitleBarLayout;
 
 /**
+ * @author
  * Created by wong on 2018/3/14.
  */
 
