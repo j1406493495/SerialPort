@@ -33,19 +33,39 @@
         android:layout_marginTop="10dp"
         android:text="@string/serial_send"/>
 
+    <Button
+        android:id="@+id/btn_query"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/query"/>
+
     <EditText
         android:id="@+id/et_send_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:hint="请输入待发送数据"/>
+        android:hint="请输入待发送数据"
+        android:visibility="gone"/>
+
+    <EditText
+        android:id="@+id/et_send_line"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="31"/>
+
+    <EditText
+        android:id="@+id/et_send_column"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="30"/>
 
     <TextView
         android:id="@+id/tv_read_data"
-        android:textColor="@color/b1"
-        android:textSize="@dimen/f3"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="10dp"
+        android:textColor="@color/b1"
+        android:textSize="@dimen/f3"/>
 
 </LinearLayout>

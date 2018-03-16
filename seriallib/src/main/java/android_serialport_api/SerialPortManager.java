@@ -1,11 +1,13 @@
 package android_serialport_api;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * @author woong
@@ -125,30 +127,36 @@ public class SerialPortManager {
         @Override
         public void run() {
             super.run();
-            Log.e(TAG, "进入线程run");
+            Log.e(TAG, "进入线程run == ");
             //判断进程是否在运行，更安全的结束进程
-            while (!mThreadStatus) {
-                Log.e(TAG, "进入线程while");
+            while (!mThreadStatus && !isInterrupted()) {
+                Log.e(TAG, "进入线程while == ");
                 //读取数据的大小
                 int size = 0;
                 try {
+                    Log.e(TAG, "startRead == ");
+
                     //64   1024
                     byte[] buffer = new byte[64];
-                    Log.e(TAG, "startRead");
                     if (inputStream == null) {
                         Log.e(TAG, "inputStream == null");
                         return;
                     }
+
                     size = inputStream.read(buffer);
-                    Log.e(TAG, "endRead");
+                    Log.e(TAG,"size ==== " + size + "buffer === " + Arrays.toString(buffer));
                     if (size > 0) {
-                        onDataReceiveListener.onDataReceive(buffer, size);
+                        byte[] readBytes = new byte[size];
+                        System.arraycopy(buffer, 0, readBytes, 0, size);
+
+                        onDataReceiveListener.onDataReceive(readBytes, size);
                     }
+
+                    Log.e(TAG, "endRead === " );
                 } catch (IOException e) {
                     Log.e(TAG, "run: 数据读取异常：" + e.toString());
                 }
             }
-            
         }
     }
 

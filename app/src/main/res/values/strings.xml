@@ -5,4 +5,5 @@
     <string name="serial_close">关闭串口</string>
     <string name="serial_send">发送数据</string>
     <string name="serial_port_debug">售货机串口调试</string>
+    <string name="query">询问状态</string>
 </resources>
