@@ -144,7 +144,6 @@ public class SerialPortManager {
                     }
 
                     size = inputStream.read(buffer);
-                    Log.e(TAG,"size ==== " + size + "buffer === " + Arrays.toString(buffer));
                     if (size > 0) {
                         byte[] readBytes = new byte[size];
                         System.arraycopy(buffer, 0, readBytes, 0, size);
@@ -164,7 +163,7 @@ public class SerialPortManager {
      * 监听数据接收
      */
     public OnDataReceiveListener onDataReceiveListener = null;
-    
+
     public interface OnDataReceiveListener {
         void onDataReceive(byte[] buffer, int size);
     }

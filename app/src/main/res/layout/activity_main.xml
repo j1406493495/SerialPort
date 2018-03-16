@@ -12,60 +12,83 @@
         android:layout_width="match_parent"
         android:layout_height="44dp"/>
 
-    <Button
-        android:id="@+id/btn_serial_open"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/serial_open"/>
-
-    <Button
-        android:id="@+id/btn_serial_close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/serial_close"/>
-
-    <Button
-        android:id="@+id/btn_serial_send"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/serial_send"/>
-
-    <Button
-        android:id="@+id/btn_query"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/query"/>
-
-    <EditText
-        android:id="@+id/et_send_data"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:hint="请输入待发送数据"
-        android:visibility="gone"/>
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
 
-    <EditText
-        android:id="@+id/et_send_line"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="31"/>
+        <Button
+            android:id="@+id/btn_serial_open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="20dp"
+            android:text="@string/serial_open"/>
 
-    <EditText
-        android:id="@+id/et_send_column"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="30"/>
+        <Button
+            android:id="@+id/btn_serial_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:text="@string/serial_close"/>
+    </LinearLayout>
 
     <TextView
-        android:id="@+id/tv_read_data"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_marginTop="10dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:paddingLeft="5dp"
+        android:text="单条数据测试:"
         android:textColor="@color/b1"
         android:textSize="@dimen/f3"/>
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:id="@+id/et_send_line"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="行数据（31～33）"/>
+
+        <EditText
+            android:id="@+id/et_send_column"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/et_send_line"
+            android:hint="列数据 (30~39)"/>
+
+        <Button
+            android:id="@+id/btn_serial_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/et_send_column"
+            android:layout_marginLeft="100dp"
+            android:text="@string/serial_send"/>
+
+        <Button
+            android:id="@+id/btn_query"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/btn_serial_send"
+            android:layout_toRightOf="@+id/btn_serial_send"
+            android:text="@string/query"/>
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:paddingLeft="5dp"
+        android:text="轮训测试:"
+        android:textColor="@color/b1"
+        android:textSize="@dimen/f3"/>
+
+    <Button
+        android:id="@+id/btn_rotation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="轮训"/>
 </LinearLayout>

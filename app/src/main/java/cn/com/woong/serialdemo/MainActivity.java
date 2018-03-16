@@ -14,7 +14,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import cn.com.woong.serialdemo.base.BaseActivity;
-import cn.com.woong.serialdemo.constant.Constant;
+import cn.com.woong.serialdemo.constant.CmdCode;
+import cn.com.woong.serialdemo.constant.RecvStatus;
+import cn.com.woong.serialdemo.utils.PacketUtils;
 import cn.com.woong.serialdemo.widget.TitleBarLayout;
 
 /**
@@ -28,25 +30,26 @@ public class MainActivity extends BaseActivity {
     Button serialOpen;
     @BindView(R.id.btn_serial_close)
     Button serialClose;
-    @BindView(R.id.btn_serial_send)
-    Button serialSend;
-    @BindView(R.id.et_send_data)
-    EditText etSendData;
-    @BindView(R.id.tv_read_data)
-    TextView tvReadData;
     @BindView(R.id.et_send_line)
     EditText etSendLine;
     @BindView(R.id.et_send_column)
     EditText etSendColumn;
+    @BindView(R.id.btn_serial_send)
+    Button serialSend;
     @BindView(R.id.btn_query)
     Button btnQuery;
+    @BindView(R.id.btn_rotation)
+    Button btnRotation;
 
-    private byte mLineBegin = 0x31;
-    private byte mColumnBegin = 0x30;
-    private String mDataLine;
-    private String mDataColumn;
-    private String mCheckCode;
+    private static final int LINE_START = 31;
+    private static final int COLUMN_START = 30;
+
     private SerialPortManager mSerialPortManager;
+    private int mDataLine;
+    private int mDataColumn;
+    private byte[] mRecvBytes = new byte[5];
+    private int mRecvSize;
+    private boolean mRotationFlag = false;
 
     @Override
     protected int getLayoutId() {
@@ -61,18 +64,23 @@ public class MainActivity extends BaseActivity {
         mSerialPortManager.setOnDataReceiveListener(new SerialPortManager.OnDataReceiveListener() {
             @Override
             public void onDataReceive(final byte[] buffer, final int size) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        LogUtils.e("read buffer === " + ConvertUtils.bytes2HexString(buffer) + ", size == " + size);
-                        tvReadData.setText(ConvertUtils.bytes2HexString(buffer));
+                LogUtils.d("read buffer === " + ConvertUtils.bytes2HexString(buffer) + ", size == " + size);
+                for (int i = 0; i < size && mRecvSize < 5; i++) {
+                    mRecvBytes[mRecvSize++] = buffer[i];
+                }
+
+                if (mRecvSize >= 5) {
+                    mRecvSize = 0;
+                    int recvStatus = PacketUtils.parsePacket(mRecvBytes);
+                    if (mRotationFlag) {
+                        rotation(recvStatus);
                     }
-                });
+                }
             }
         });
     }
 
-    @OnClick({R.id.btn_serial_open, R.id.btn_serial_close, R.id.btn_serial_send, R.id.btn_query})
+    @OnClick({R.id.btn_serial_open, R.id.btn_serial_close, R.id.btn_serial_send, R.id.btn_query, R.id.btn_rotation})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_serial_open:
@@ -82,47 +90,40 @@ public class MainActivity extends BaseActivity {
                 mSerialPortManager.closeSerialPort();
                 break;
             case R.id.btn_serial_send:
-                getDataCode(Constant.CMD_CW_START);
-
-                String sendStr = Constant.CMD_START + Constant.CMD_CW_START + mDataLine + mDataColumn
-                        + Constant.CMD_DATA_FILLING + Constant.CMD_DATA_FILLING + Constant.CMD_DATA_FILLING
-                        + mCheckCode + Constant.CMD_END;
-                LogUtils.e("sendStr === " + sendStr);
-
-                byte[] sendBytes = ConvertUtils.hexString2Bytes(sendStr);
-                for (int i = 0, count = sendBytes.length; i < count; i++) {
-                    LogUtils.e("byte " + i + " == " + sendBytes[i]);
-                }
-                mSerialPortManager.sendSerialPort(ConvertUtils.hexString2Bytes(sendStr));
+                mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_START,
+                        etSendLine.getText().toString().trim(), etSendColumn.getText().toString().trim()));
                 break;
             case R.id.btn_query:
-                getDataCode(Constant.CMD_CW_QUERY);
-
-                String queryStr = Constant.CMD_START + Constant.CMD_CW_QUERY+ mDataLine + mDataColumn
-                        + Constant.CMD_DATA_FILLING + Constant.CMD_DATA_FILLING + Constant.CMD_DATA_FILLING
-                        + mCheckCode + Constant.CMD_END;
-                LogUtils.e("sendStr === " + queryStr);
-
-                byte[] queryBytes = ConvertUtils.hexString2Bytes(queryStr);
-                for (int i = 0, count = queryBytes.length; i < count; i++) {
-                    LogUtils.e("byte " + i + " == " + queryBytes[i]);
-                }
-                mSerialPortManager.sendSerialPort(ConvertUtils.hexString2Bytes(queryStr));
+                mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                        etSendLine.getText().toString().trim(), etSendColumn.getText().toString().trim()));
+                break;
+            case R.id.btn_rotation:
+                mRotationFlag = true;
+                mDataLine = LINE_START;
+                mDataColumn = COLUMN_START;
+                mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_START,
+                        String.valueOf(mDataLine), String.valueOf(mDataColumn)));
                 break;
             default:
                 break;
         }
     }
 
-    private void getDataCode(String cmdCw) {
-        mDataLine = etSendLine.getText().toString().trim();
-        mDataColumn = etSendColumn.getText().toString().trim();
-
-        byte cmdCwStart = ConvertUtils.hexString2Bytes(cmdCw)[0];
-        byte dataLine = ConvertUtils.hexString2Bytes(mDataLine)[0];
-        byte dataColumn = ConvertUtils.hexString2Bytes(mDataColumn)[0];
-        byte[] checkCode = new byte[1];
-        checkCode[0] = (byte) (cmdCwStart ^ dataLine ^ dataColumn);
-        mCheckCode = ConvertUtils.bytes2HexString(checkCode);
+    private void rotation(int rotationFlag) {
+        if (rotationFlag == RecvStatus.START_FREE) {
+            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                    String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+        } else if (rotationFlag == RecvStatus.QUERY_COMPLETE) {
+            mDataLine += 1;
+            mDataColumn += 1;
+            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_START,
+                    String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+        } else if (rotationFlag == RecvStatus.QUERY_BUSY) {
+            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                    String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+        } else if (rotationFlag == RecvStatus.QUERY_TIMEOUT) {
+            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                    String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+        }
     }
 }
