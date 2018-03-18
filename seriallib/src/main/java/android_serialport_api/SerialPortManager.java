@@ -1,5 +1,8 @@
 package android_serialport_api;
 
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -29,10 +32,21 @@ public class SerialPortManager {
      */
     private boolean mThreadStatus;
 
-    public SerialPort serialPort = null;
-    public InputStream inputStream = null;
-    public OutputStream outputStream = null;
-    private ReadThread readThread;
+    /**
+     * 数据发送后是否有返回
+     */
+    private volatile boolean mHasRecv;
+    private byte[] mRecvBuf = new byte[5];
+    private int mRecvSize = 0;
+
+
+    public SerialPort mSerialPort = null;
+    public InputStream mInputStream = null;
+    public OutputStream mOutputStream = null;
+
+    private ReadThread mReadThread;
+    private HandlerThread mSendHandlerThread;
+    private Handler mSendHandler;
 
     private SerialPortManager() {}
 
@@ -60,23 +74,26 @@ public class SerialPortManager {
                 Log.e(TAG, "device is null === ");
                 return null;
             }
-            serialPort = new SerialPort(new File(mDevice), mBaudrate, 0);
+            mSerialPort = new SerialPort(new File(mDevice), mBaudrate, 0);
 
             mSerialPortStatus = true;
             mThreadStatus = false;
 
-            inputStream = serialPort.getInputStream();
-            outputStream = serialPort.getOutputStream();
+            mInputStream = mSerialPort.getInputStream();
+            mOutputStream = mSerialPort.getOutputStream();
 
+            //数据发送线程
+            startSendThread();
             //开始线程监控是否有数据要接收
-            readThread = new ReadThread();
-            readThread.start();
+            mReadThread = new ReadThread();
+            mReadThread.setName("Recv Thread");
+            mReadThread.start();
         } catch (IOException e) {
             Log.e(TAG, "openSerialPort: 打开串口异常：" + e.toString());
-            return serialPort;
+            return mSerialPort;
         }
         Log.e(TAG, "openSerialPort: 打开串口");
-        return serialPort;
+        return mSerialPort;
     }
     
     /**
@@ -88,10 +105,10 @@ public class SerialPortManager {
                 mSerialPortStatus = false;
                 mThreadStatus = true;
 
-                inputStream.close();
-                outputStream.close();
+                mInputStream.close();
+                mOutputStream.close();
 
-                serialPort.close();
+                mSerialPort.close();
                 Log.e(TAG, "closeSerialPort: 关闭串口成功");
             }
         } catch (IOException e) {
@@ -107,17 +124,50 @@ public class SerialPortManager {
      */
     public void sendSerialPort(byte[] sendData) {
         Log.e(TAG, "sendSerialPort: 发送数据");
-        
-        try {
-            if (sendData.length > 0 && mSerialPortStatus) {
-                outputStream.write(sendData);
-                outputStream.write('\n');
-                outputStream.flush();
-                Log.e(TAG, "sendSerialPort: 串口数据发送成功");
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "sendSerialPort: 串口数据发送失败：" + e.toString());
+        sendBytes(sendData);
+    }
+
+    private synchronized void sendBytes(byte[] sendBytes) {
+        if (mSendHandler != null) {
+            Message message = mSendHandler.obtainMessage();
+            message.obj = sendBytes;
+            message.sendToTarget();
         }
+    }
+
+    private void startSendThread() {
+        mSendHandlerThread = new HandlerThread("send handler thread");
+        mSendHandlerThread.start();
+        mSendHandler = new Handler(mSendHandlerThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                mHasRecv = false;
+                byte[] sendData = (byte[]) msg.obj;
+
+                try {
+                    if (sendData.length > 0 && mSerialPortStatus) {
+                        mOutputStream.write(sendData);
+                        mOutputStream.write('\n');
+                        mOutputStream.flush();
+                        Log.e(TAG, "sendSerialPort: 串口数据发送成功");
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "sendSerialPort: 串口数据发送失败：" + e.toString());
+                }
+
+                try {
+                    //1s后，若无返回数据，再次发送
+                    Thread.sleep(1000);
+
+                    if (!mHasRecv) {
+                        sendBytes(sendData);
+                        onDataReceiveListener.onDataRecvError();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
     }
     
     /**
@@ -138,17 +188,28 @@ public class SerialPortManager {
 
                     //64   1024
                     byte[] buffer = new byte[64];
-                    if (inputStream == null) {
-                        Log.e(TAG, "inputStream == null");
+                    if (mInputStream == null) {
+                        Log.e(TAG, "mInputStream == null");
                         return;
                     }
 
-                    size = inputStream.read(buffer);
+                    size = mInputStream.read(buffer);
                     if (size > 0) {
                         byte[] readBytes = new byte[size];
                         System.arraycopy(buffer, 0, readBytes, 0, size);
 
-                        onDataReceiveListener.onDataReceive(readBytes, size);
+                        for (int i = 0; i < size && mRecvSize < 5; i++) {
+                            mRecvBuf[mRecvSize++] = readBytes[i];
+                            if (mRecvBuf[0] != (byte) 0xAA) {
+                                mRecvSize = 0;
+                            }
+                        }
+
+                        if (mRecvSize >= 5 && mRecvBuf[0] == (byte) 0xAA) {
+                            mRecvSize = 0;
+                            mHasRecv = true;
+                            onDataReceiveListener.onDataReceive(mRecvBuf, size);
+                        }
                     }
 
                     Log.e(TAG, "endRead === " );
@@ -159,6 +220,7 @@ public class SerialPortManager {
         }
     }
 
+
     /**
      * 监听数据接收
      */
@@ -166,6 +228,7 @@ public class SerialPortManager {
 
     public interface OnDataReceiveListener {
         void onDataReceive(byte[] buffer, int size);
+        void onDataRecvError();
     }
     
     public void setOnDataReceiveListener(OnDataReceiveListener dataReceiveListener) {

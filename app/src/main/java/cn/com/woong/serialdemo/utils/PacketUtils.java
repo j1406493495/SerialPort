@@ -57,15 +57,19 @@ public class PacketUtils {
                 case CmdCode.CMD_CW_QUERY_BYTE:
                     if (recvBytes[2] == (byte) 0x30 && recvBytes[3] == (byte) 0x62
                             && recvBytes[4] == CmdCode.CMD_END_BYTE) {
+                        //询问 忙
                         return RecvStatus.QUERY_BUSY;
                     } else if (recvBytes[2] == (byte) 0x31 && recvBytes[3] == (byte) 0x63
                             && recvBytes[4] == CmdCode.CMD_END_BYTE) {
+                        //询问 完成
                         return RecvStatus.QUERY_COMPLETE;
                     } else if (recvBytes[2] == (byte) 0x32 && recvBytes[3] == (byte) 0x60
                             && recvBytes[4] == CmdCode.CMD_END_BYTE) {
+                        //询问 超时
                         return RecvStatus.QUERY_TIMEOUT;
                     } else if (recvBytes[2] == (byte) 0x34 && recvBytes[3] == (byte) 0x66
                             && recvBytes[4] == CmdCode.CMD_END_BYTE) {
+                        //询问 光幕
                         return RecvStatus.QUERY_SCREEN;
                     }
                     break;
@@ -74,6 +78,7 @@ public class PacketUtils {
             }
         }
 
+        //失败
         return RecvStatus.RECV_FAILED;
     }
 }

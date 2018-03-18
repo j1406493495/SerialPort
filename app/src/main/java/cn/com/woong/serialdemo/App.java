@@ -20,7 +20,6 @@ public class App extends Application {
         super.onCreate();
         mInstance = this;
         Utils.init(mInstance);
-        ButterKnife.setDebug(true);
     }
 
     public static Context getAppContext() {

@@ -1,10 +1,17 @@
 package cn.com.woong.serialdemo;
 
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+
 import com.blankj.utilcode.util.ConvertUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ToastUtils;
+
+import java.util.Arrays;
+
 import android_serialport_api.SerialPortManager;
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -36,6 +43,10 @@ public class MainActivity extends BaseActivity {
     Button btnQuery;
     @BindView(R.id.btn_rotation)
     Button btnRotation;
+    @BindView(R.id.btn_pause_rotation)
+    Button btnPauseRotation;
+    @BindView(R.id.tv_log)
+    TextView tvLog;
 
     private static final int LINE_START = 31;
     private static final int COLUMN_START = 30;
@@ -43,9 +54,9 @@ public class MainActivity extends BaseActivity {
     private SerialPortManager mSerialPortManager;
     private int mDataLine;
     private int mDataColumn;
-    private byte[] mRecvBytes = new byte[5];
-    private int mRecvSize;
     private boolean mRotationFlag = false;
+    private boolean mModeRotation = false;
+    private String mLogStr = "";
 
     @Override
     protected int getLayoutId() {
@@ -55,28 +66,41 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void initView() {
         titleBar.setTitle(getString(R.string.serial_port_debug));
+        mDataLine = LINE_START;
+        mDataColumn = COLUMN_START;
 
         mSerialPortManager = SerialPortManager.getInstance();
         mSerialPortManager.setOnDataReceiveListener(new SerialPortManager.OnDataReceiveListener() {
             @Override
             public void onDataReceive(final byte[] buffer, final int size) {
                 LogUtils.d("read buffer === " + ConvertUtils.bytes2HexString(buffer) + ", size == " + size);
-                for (int i = 0; i < size && mRecvSize < 5; i++) {
-                    mRecvBytes[mRecvSize++] = buffer[i];
-                }
+                parseRecvData(buffer);
+            }
 
-                if (mRecvSize >= 5) {
-                    mRecvSize = 0;
-                    int recvStatus = PacketUtils.parsePacket(mRecvBytes);
-                    if (mRotationFlag) {
-                        rotation(recvStatus);
-                    }
-                }
+            @Override
+            public void onDataRecvError() {
+                sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                        String.valueOf(mDataLine), String.valueOf(mDataColumn)));
             }
         });
     }
 
-    @OnClick({R.id.btn_serial_open, R.id.btn_serial_close, R.id.btn_serial_send, R.id.btn_query, R.id.btn_rotation})
+    private void parseRecvData(final byte[] recvBytes) {
+        final int recvStatus = PacketUtils.parsePacket(recvBytes);
+        if (mRotationFlag) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mLogStr = "接收数据 " + ConvertUtils.bytes2HexString(recvBytes) + "\n" + mLogStr;
+                    tvLog.setText(mLogStr);
+                    rotation(recvStatus);
+                }
+            });
+        }
+    }
+
+    @OnClick({R.id.btn_serial_open, R.id.btn_serial_close, R.id.btn_serial_send, R.id.btn_query,
+            R.id.btn_rotation, R.id.btn_pause_rotation})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_serial_open:
@@ -86,19 +110,38 @@ public class MainActivity extends BaseActivity {
                 mSerialPortManager.closeSerialPort();
                 break;
             case R.id.btn_serial_send:
-                mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_START,
-                        etSendLine.getText().toString().trim(), etSendColumn.getText().toString().trim()));
+                String dataLine = etSendLine.getText().toString().trim();
+                String dataColumn = etSendColumn.getText().toString().trim();
+                if (!TextUtils.isEmpty(dataLine) && !TextUtils.isEmpty(dataColumn)) {
+                    sendData(PacketUtils.writePacket(CmdCode.CMD_CW_START,
+                            dataLine, dataColumn));
+                } else {
+                    ToastUtils.showShort("行/列数据不能为空");
+                }
                 break;
             case R.id.btn_query:
-                mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
-                        etSendLine.getText().toString().trim(), etSendColumn.getText().toString().trim()));
+                String dataQueryLine = etSendLine.getText().toString().trim();
+                String dataQueryColumn = etSendColumn.getText().toString().trim();
+                if (!TextUtils.isEmpty(dataQueryLine) && !TextUtils.isEmpty(dataQueryColumn)) {
+                    sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                            dataQueryLine, dataQueryColumn));
+                } else {
+                    ToastUtils.showShort("行/列数据不能为空");
+                }
                 break;
             case R.id.btn_rotation:
+                mModeRotation = true;
                 mRotationFlag = true;
-                mDataLine = LINE_START;
-                mDataColumn = COLUMN_START;
-                mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_START,
+                btnRotation.setEnabled(false);
+                btnPauseRotation.setEnabled(true);
+
+                sendData(PacketUtils.writePacket(CmdCode.CMD_CW_START,
                         String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+                break;
+            case R.id.btn_pause_rotation:
+                mRotationFlag = false;
+                btnRotation.setEnabled(true);
+                btnPauseRotation.setEnabled(false);
                 break;
             default:
                 break;
@@ -106,20 +149,48 @@ public class MainActivity extends BaseActivity {
     }
 
     private void rotation(int rotationFlag) {
+        LogUtils.d("rotationFlag === " + rotationFlag);
         if (rotationFlag == RecvStatus.START_FREE) {
-            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+            mLogStr = "开始 空闲 \n" + mLogStr;
+            tvLog.setText(mLogStr);
+            sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
                     String.valueOf(mDataLine), String.valueOf(mDataColumn)));
         } else if (rotationFlag == RecvStatus.QUERY_COMPLETE) {
-            mDataLine += 1;
-            mDataColumn += 1;
-            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_START,
+            if (mDataColumn < 39) {
+                mDataColumn += 1;
+            } else {
+                mDataColumn = 30;
+                if (mDataLine < 33) {
+                    mDataLine += 1;
+                } else {
+                    mDataLine = 31;
+                }
+            }
+            mLogStr = "询问 完成 \n" + mLogStr;
+            tvLog.setText(mLogStr);
+            sendData(PacketUtils.writePacket(CmdCode.CMD_CW_START,
                     String.valueOf(mDataLine), String.valueOf(mDataColumn)));
         } else if (rotationFlag == RecvStatus.QUERY_BUSY) {
-            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+            mLogStr = "询问 忙 \n" + mLogStr;
+            tvLog.setText(mLogStr);
+            sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
                     String.valueOf(mDataLine), String.valueOf(mDataColumn)));
         } else if (rotationFlag == RecvStatus.QUERY_TIMEOUT) {
-            mSerialPortManager.sendSerialPort(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+            mLogStr = "询问 超时 \n" + mLogStr;
+            tvLog.setText(mLogStr);
+            sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+                    String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+        } else {
+            mLogStr = "返回数据错误 \n" + mLogStr;
+            tvLog.setText(mLogStr);
+            sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
                     String.valueOf(mDataLine), String.valueOf(mDataColumn)));
         }
+    }
+
+    private void sendData(byte[] sendData) {
+        mLogStr = "发送 " + ConvertUtils.bytes2HexString(sendData) + "\n" + mLogStr;
+        tvLog.setText(mLogStr);
+        mSerialPortManager.sendSerialPort(sendData);
     }
 }
