@@ -51,7 +51,7 @@ public class MainActivity extends BaseActivity {
     private static final int LINE_START = 31;
     private static final int COLUMN_START = 30;
 
-    private SerialPortManager mSerialPortManager;
+//    private SerialPortManager mSerialPortManager;
     private int mDataLine;
     private int mDataColumn;
     private boolean mRotationFlag = false;
@@ -69,20 +69,20 @@ public class MainActivity extends BaseActivity {
         mDataLine = LINE_START;
         mDataColumn = COLUMN_START;
 
-        mSerialPortManager = SerialPortManager.getInstance();
-        mSerialPortManager.setOnDataReceiveListener(new SerialPortManager.OnDataReceiveListener() {
-            @Override
-            public void onDataReceive(final byte[] buffer, final int size) {
-                LogUtils.d("read buffer === " + ConvertUtils.bytes2HexString(buffer) + ", size == " + size);
-                parseRecvData(buffer);
-            }
-
-            @Override
-            public void onDataRecvError() {
-                sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
-                        String.valueOf(mDataLine), String.valueOf(mDataColumn)));
-            }
-        });
+//        mSerialPortManager = SerialPortManager.getInstance();
+//        mSerialPortManager.setOnDataReceiveListener(new SerialPortManager.OnDataReceiveListener() {
+//            @Override
+//            public void onDataReceive(final byte[] buffer, final int size) {
+//                LogUtils.d("read buffer === " + ConvertUtils.bytes2HexString(buffer) + ", size == " + size);
+//                parseRecvData(buffer);
+//            }
+//
+//            @Override
+//            public void onDataRecvError() {
+//                sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
+//                        String.valueOf(mDataLine), String.valueOf(mDataColumn)));
+//            }
+//        });
     }
 
     private void parseRecvData(final byte[] recvBytes) {
@@ -104,10 +104,10 @@ public class MainActivity extends BaseActivity {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_serial_open:
-                mSerialPortManager.openSerialPort();
+//                mSerialPortManager.openSerialPort();
                 break;
             case R.id.btn_serial_close:
-                mSerialPortManager.closeSerialPort();
+//                mSerialPortManager.closeSerialPort();
                 break;
             case R.id.btn_serial_send:
                 String dataLine = etSendLine.getText().toString().trim();
@@ -191,6 +191,6 @@ public class MainActivity extends BaseActivity {
     private void sendData(byte[] sendData) {
         mLogStr = "发送 " + ConvertUtils.bytes2HexString(sendData) + "\n" + mLogStr;
         tvLog.setText(mLogStr);
-        mSerialPortManager.sendSerialPort(sendData);
+//        mSerialPortManager.sendSerialPort(sendData);
     }
 }
