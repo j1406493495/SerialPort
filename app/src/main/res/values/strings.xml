@@ -4,10 +4,5 @@
     <string name="serial_open">打开串口</string>
     <string name="serial_close">关闭串口</string>
     <string name="serial_send">发送数据</string>
-    <string name="serial_port_debug">售货机串口调试</string>
-    <string name="query">询问状态</string>
-    <string name="pause_rotation">暂停轮训</string>
-    <string name="continue_rotation">继续轮训</string>
-    <string name="control_rotation">轮训控制</string>
-    <string name="rotation">轮训</string>
+    <string name="serial_port_debug">串口调试</string>
 </resources>
