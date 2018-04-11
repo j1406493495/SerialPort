@@ -19,5 +19,5 @@ public abstract class SerialPacket {
     /**
      * 解析串口返回数据
      */
-    public abstract void decodeRecvPacket(byte[] recvBytes);
+    public abstract void decodeRecvPacket(Object recvObject);
 }

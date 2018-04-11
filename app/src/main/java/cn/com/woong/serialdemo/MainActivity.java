@@ -1,15 +1,20 @@
 package cn.com.woong.serialdemo;
 
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 import cn.com.woong.serialdemo.base.BaseActivity;
+import cn.com.woong.serialdemo.packets.TestMsg;
+import cn.com.woong.serialdemo.packets.TestPacket;
+import cn.com.woong.serialdemo.utils.TestUtil;
 import cn.com.woong.serialdemo.widget.TitleBarLayout;
 
 /**
- * @author
- * Created by wong on 2018/3/14.
+ * @author Created by wong on 2018/3/14.
  */
 
 public class MainActivity extends BaseActivity {
@@ -19,16 +24,10 @@ public class MainActivity extends BaseActivity {
     Button serialOpen;
     @BindView(R.id.btn_serial_close)
     Button serialClose;
+    @BindView(R.id.btn_serial_send)
+    Button btnSerialSend;
 
-    private static final int LINE_START = 31;
-    private static final int COLUMN_START = 30;
-
-//    private SerialPortManager mSerialPortManager;
-    private int mDataLine;
-    private int mDataColumn;
-    private boolean mRotationFlag = false;
-    private boolean mModeRotation = false;
-    private String mLogStr = "";
+    TestUtil mTestUtil;
 
     @Override
     protected int getLayoutId() {
@@ -38,34 +37,24 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void initView() {
         titleBar.setTitle(getString(R.string.serial_port_debug));
-        mDataLine = LINE_START;
-        mDataColumn = COLUMN_START;
 
-//        mSerialPortManager = SerialPortManager.getInstance();
-//        mSerialPortManager.setOnDataReceiveListener(new SerialPortManager.OnDataReceiveListener() {
-//            @Override
-//            public void onDataReceive(final byte[] buffer, final int size) {
-//                LogUtils.d("read buffer === " + ConvertUtils.bytes2HexString(buffer) + ", size == " + size);
-//                parseRecvData(buffer);
-//            }
-//
-//            @Override
-//            public void onDataRecvError() {
-//                sendData(PacketUtils.writePacket(CmdCode.CMD_CW_QUERY,
-//                        String.valueOf(mDataLine), String.valueOf(mDataColumn)));
-//            }
-//        });
+        mTestUtil = TestUtil.getInstance();
     }
 
-    @OnClick({R.id.btn_serial_open, R.id.btn_serial_close})
+    @OnClick({R.id.btn_serial_open, R.id.btn_serial_close, R.id.btn_serial_send})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_serial_open:
-//                mSerialPortManager.openSerialPort();
+                mTestUtil.init();
                 break;
             case R.id.btn_serial_close:
-//                mSerialPortManager.closeSerialPort();
+                mTestUtil.destory();
                 break;
+            case R.id.btn_serial_send:
+                TestPacket testPacket = new TestPacket();
+                TestMsg testMsg = new TestMsg();
+                testPacket.serialMsg = testMsg;
+                mTestUtil.sendPacket(testPacket);
             default:
                 break;
         }

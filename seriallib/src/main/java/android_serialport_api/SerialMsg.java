@@ -5,7 +5,6 @@ package android_serialport_api;
  */
 
 public abstract class SerialMsg {
-    public byte msgType;
     public byte recvMsgType;
     public byte sendMsgLength;
     public byte recvMsgLength;

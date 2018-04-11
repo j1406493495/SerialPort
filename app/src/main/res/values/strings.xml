@@ -5,4 +5,5 @@
     <string name="serial_close">关闭串口</string>
     <string name="serial_send">发送数据</string>
     <string name="serial_port_debug">串口调试</string>
+    <string name="send">发送数据</string>
 </resources>

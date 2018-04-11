@@ -17,20 +17,26 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <Button
             android:id="@+id/btn_serial_open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="20dp"
             android:text="@string/serial_open"/>
 
         <Button
             android:id="@+id/btn_serial_close"
             android:layout_width="wrap_content"
+            android:layout_marginTop="20dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
             android:text="@string/serial_close"/>
+
+        <Button
+            android:id="@+id/btn_serial_send"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_height="wrap_content"
+            android:text="@string/send"/>
     </LinearLayout>
 </LinearLayout>
