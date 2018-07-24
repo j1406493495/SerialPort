@@ -97,7 +97,6 @@ public class SerialPortManager {
         try {
             if (sendData.length > 0 && mSerialPortStatus) {
                 mOutputStream.write(sendData);
-                mOutputStream.write('\n');
                 mOutputStream.flush();
                 Log.e(TAG, "sendSerialPort == : 串口数据发送成功");
             }
