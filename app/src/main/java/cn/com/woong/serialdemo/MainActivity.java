@@ -12,6 +12,7 @@ import cn.com.woong.serialdemo.packets.TestMsg;
 import cn.com.woong.serialdemo.packets.TestPacket;
 import cn.com.woong.serialdemo.utils.TestUtil;
 import cn.com.woong.serialdemo.widget.TitleBarLayout;
+import io.reactivex.functions.Consumer;
 
 /**
  * @author Created by wong on 2018/3/14.
@@ -54,7 +55,19 @@ public class MainActivity extends BaseActivity {
                 TestPacket testPacket = new TestPacket();
                 TestMsg testMsg = new TestMsg();
                 testPacket.serialMsg = testMsg;
-                mTestUtil.sendPacket(testPacket);
+                mTestUtil.sendPacket(testPacket)
+                        .compose(RxSchedulers.<TestPacket>io_main())
+                        .subscribe(new Consumer<TestPacket>() {
+                            @Override
+                            public void accept(TestPacket testPacket) throws Exception {
+
+                            }
+                        }, new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) throws Exception {
+
+                            }
+                        });
             default:
                 break;
         }

@@ -7,10 +7,6 @@ import android_serialport_api.SerialMsg;
  */
 
 public class TestMsg extends SerialMsg {
-    @Override
-    public byte getMsgType() {
-        return (byte) 0x01;
-    }
 
     @Override
     public byte[] encodeSendMsg() {

@@ -12,8 +12,6 @@ public abstract class SerialMsg {
     public boolean hasAck;
     public boolean needAck;
 
-    public abstract byte getMsgType();
-
     public abstract byte[] encodeSendMsg();
 
     public abstract void decodeRecvMsg(byte[] recvMsg);

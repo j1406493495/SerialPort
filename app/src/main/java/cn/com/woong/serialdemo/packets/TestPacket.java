@@ -14,9 +14,10 @@ public class TestPacket extends SerialPacket {
     public TestPacket() {
         deviceType = 0x53;
         deviceNum = 0x00;
+        setPacketId();
     }
 
-    public void setPacketId() {
+    private void setPacketId() {
         increaseId++;
         if (increaseId  == Integer.MAX_VALUE) {
             increaseId = 0;
@@ -51,6 +52,6 @@ public class TestPacket extends SerialPacket {
         deviceNum = recvBytes[1];
         byte[] msg = new byte[recvBytes.length - 2];
         System.arraycopy(recvBytes, 2, msg, 0, msg.length);
-        serialMsg = TestUtil.getInstance().parseMsg(msg);
+        serialMsg.decodeRecvMsg(msg);
     }
 }
