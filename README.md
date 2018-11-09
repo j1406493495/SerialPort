@@ -57,3 +57,11 @@ mSerialPortManager.sendPacket(testPacket);
 ```
 
 其中testPacket继承自SerialPacket，为串口数据的封装类，详见示例代码。
+
+
+
+---
+
+本文由 [Woong](http://woong.com.cn/) 创作，采用 [知识共享署名4.0](https://creativecommons.org/licenses/by/4.0/) 国际许可协议进行许可
+本站文章除注明转载/出处外，均为本站原创或翻译，转载前请务必署名
+最后编辑时间为:2018-11-09
