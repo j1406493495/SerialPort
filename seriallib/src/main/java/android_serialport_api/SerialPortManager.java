@@ -42,7 +42,7 @@ public class SerialPortManager {
         try {
             File deviceFile = new File(device);
             if (!deviceFile.exists()) {
-                Log.e(TAG, "device is null === ");
+                Log.e(TAG, "device is null == ");
                 return null;
             }
             mSerialPort = new SerialPort(new File(device), baudrate, 0);
@@ -138,7 +138,7 @@ public class SerialPortManager {
                         }
                     }
 
-                    Log.e(TAG, "endRead === " );
+                    Log.e(TAG, "endRead == " );
                 } catch (IOException e) {
                     Log.e(TAG, "run == : 数据读取异常：" + e.toString());
                 }
