@@ -59,7 +59,7 @@ public class TestUtil implements SerialPortManager.OnDataReceiveListener {
     public void init() {
         if (mSerialPortManager == null) {
             String device = "/dev/ttyO3";
-            int baudrate = 38400;
+            int baudrate = 19200;
             mSerialPortManager = new SerialPortManager(device, baudrate);
             mSerialPortManager.setOnDataReceiveListener(this);
         }
